@@ -1,0 +1,114 @@
+name: 📸 Screenshots & Deploy
+
+on:
+  # Se ejecuta manualmente o por push a main
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 'URLs a capturar (separadas por comas)'
+        required: false
+        default: ''
+      full_page:
+        description: 'Captura página completa'
+        required: false
+        type: boolean
+        default: false
+
+# Permisos para desplegar en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Solo un deploy a la vez
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  screenshot:
+    name: 📸 Capturar & Publicar
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Instalar dependencias
+        run: npm ci
+
+      - name: 🎭 Instalar navegadores Playwright
+        run: npx playwright install --with-deps chromium
+
+      # ──────────────────────────────────────────────
+      # 🔧 PERSONALIZA: Inicia tu aplicación aquí
+      # ──────────────────────────────────────────────
+      # - name: 🚀 Iniciar aplicación
+      #   run: npm start &
+      #   env:
+      #     PORT: 3000
+      # 
+      # - name: ⏳ Esperar a que la app esté lista
+      #   run: npx wait-on http://localhost:3000 --timeout 30000
+      # ──────────────────────────────────────────────
+
+      - name: 📸 Capturar pantallas
+        run: |
+          if [ -n "${{ github.event.inputs.urls }}" ]; then
+            IFS=',' read -ra URL_ARRAY <<< "${{ github.event.inputs.urls }}"
+            ARGS=""
+            for url in "${URL_ARRAY[@]}"; do
+              ARGS="$ARGS --url $(echo $url | xargs)"
+            done
+            if [ "${{ github.event.inputs.full_page }}" = "true" ]; then
+              ARGS="$ARGS --full-page"
+            fi
+            node scripts/capture.js $ARGS
+          elif [ -f "urls.txt" ]; then
+            node scripts/capture.js --urls-file urls.txt
+          else
+            node scripts/capture.js
+          fi
+
+      - name: 📤 Subir artefactos de capturas
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
+          retention-days: 30
+
+      - name: 🏗️ Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: 📦 Subir a GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: screenshots/
+
+      - name: 🚀 Deploy a GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 📋 Resumen
+        run: |
+          echo "## 📸 Capturas generadas" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f screenshots/summary.json ]; then
+            TOTAL=$(jq '.total' screenshots/summary.json)
+            SUCCESS=$(jq '.successful' screenshots/summary.json)
+            echo "✅ **$SUCCESS/$TOTAL** capturas exitosas" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🌐 **URL pública:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Captura | URL |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|-----|" >> $GITHUB_STEP_SUMMARY
+            jq -r '.captures[] | "| \(.name) | \(.url) |"' screenshots/summary.json >> $GITHUB_STEP_SUMMARY
+          fi

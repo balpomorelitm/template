@@ -1,0 +1,22 @@
+{
+  "name": "my-project-template",
+  "version": "1.0.0",
+  "description": "Plantilla base para proyectos con captura de pantalla automática y publicación en GitHub Pages",
+  "scripts": {
+    "screenshot": "node scripts/capture.js",
+    "screenshot:full": "node scripts/capture.js --full-page",
+    "screenshot:urls": "node scripts/capture.js --urls-file urls.txt",
+    "postinstall": "npx playwright install chromium"
+  },
+  "keywords": [
+    "template",
+    "screenshot",
+    "playwright",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}

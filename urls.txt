@@ -1,0 +1,9 @@
+# URLs a capturar (una por línea)
+# Las líneas que empiezan con # son comentarios
+# 
+# Modifica esta lista con las URLs de tu proyecto:
+
+http://localhost:3000
+# http://localhost:3000/about
+# http://localhost:3000/dashboard
+# https://tu-sitio.com

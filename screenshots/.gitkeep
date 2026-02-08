@@ -1,0 +1,3 @@
+# screenshots/ - Carpeta de capturas de pantalla
+# Las capturas se generan automáticamente y se publican vía GitHub Pages.
+# No subas capturas manualmente; usa `npm run screenshot` o el workflow de GitHub Actions.

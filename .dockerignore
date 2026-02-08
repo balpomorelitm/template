@@ -1,0 +1,10 @@
+node_modules
+screenshots/*.png
+screenshots/*.jpeg
+screenshots/*.jpg
+screenshots/index.html
+screenshots/summary.json
+.env
+.env.local
+.git
+.github

@@ -1,0 +1,22 @@
+services:
+  # Tu aplicación (descomenta y ajusta según tu proyecto)
+  # app:
+  #   build: .
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=production
+  #   volumes:
+  #     - ./src:/app/src
+
+  # Servicio de capturas de pantalla
+  screenshot:
+    build: .
+    volumes:
+      - ./screenshots:/app/screenshots
+      - ./urls.txt:/app/urls.txt:ro
+    # depends_on:
+    #   - app
+    command: ["npm", "run", "screenshot"]
+    environment:
+      - NODE_ENV=production
